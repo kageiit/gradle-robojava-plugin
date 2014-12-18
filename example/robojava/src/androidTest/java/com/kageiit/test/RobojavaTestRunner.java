@@ -48,11 +48,20 @@ public class RobojavaTestRunner extends RobolectricTestRunner {
         try {
             File file = new File(".");
             path = file.getCanonicalPath();
-            path = path.replace("/robojava", ""); //name of stub project
-            path = path.replace("tdd", ""); //name of stub project
-            path = path + "/robojava/"; //name of android project
+            path = replaceLast(path, "/robojava", ""); //android project
+            path = replaceLast(path, "/tdd", ""); //stub project
+            path = path + "/robojava/";
         } catch (IOException ignored) {
         }
         return path;
+    }
+
+    private static String replaceLast(String string, String from, String to) {
+        int lastIndex = string.lastIndexOf(from);
+        if (lastIndex < 0) {
+            return string;
+        }
+        String tail = string.substring(lastIndex).replaceFirst(from, to);
+        return string.substring(0, lastIndex) + tail;
     }
 }
