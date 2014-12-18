@@ -37,6 +37,8 @@ The final structure may look something like this:
 
 ![Project Structure](images/structure.png)
 
+You may need to also use a custom test runner (may not be required for library projects). See the included example.
+
 This plugin was created mainly to address the problem of not being able to configure Android project tests easily for the IDE and TDD etc. You can now simply do the following:
 - Run/debug all robolectric tests in the IDE without any other manual intervention/configuration.
 - Run a set of tests via the commandline: `./gradlew tdd:test --tests com.exampe.MyActivityTest.testAwesomeMethod`
