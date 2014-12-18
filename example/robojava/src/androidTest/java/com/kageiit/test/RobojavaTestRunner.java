@@ -48,6 +48,7 @@ public class RobojavaTestRunner extends RobolectricTestRunner {
         try {
             File file = new File(".");
             path = file.getCanonicalPath();
+            path = path.replace("/robojava", ""); //name of stub project
             path = path.replace("tdd", ""); //name of stub project
             path = path + "/robojava/"; //name of android project
         } catch (IOException ignored) {
