@@ -2,14 +2,15 @@ package com.kageiit;
 
 import android.app.Activity;
 
+import com.kageiit.test.RobojavaTestRunner;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
-import org.robolectric.RobolectricTestRunner;
 
 import static org.junit.Assert.assertTrue;
 
-@RunWith(RobolectricTestRunner.class)
+@RunWith(RobojavaTestRunner.class)
 public class RobojavaActivityTest {
 
     @Test
