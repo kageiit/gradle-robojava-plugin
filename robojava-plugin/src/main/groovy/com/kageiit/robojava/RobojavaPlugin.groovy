@@ -6,6 +6,7 @@ import com.squareup.javawriter.JavaWriter
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.dsl.RepositoryHandler
+import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.testing.Test
 
 import static javax.lang.model.element.Modifier.FINAL
@@ -102,11 +103,22 @@ class RobojavaPlugin implements Plugin<Project> {
             }
         }
 
+
+        def processedManifestPath = variant.outputs[0].processManifest.manifestOutputFile.absolutePath
+        def processedResourcesPath = variant.mergeResources.outputDir.absolutePath
+        def processedAssetsPath = variant.mergeAssets.outputDir.absolutePath
+
         //configure test task
         robojavaProject.tasks.withType(Test) {
             outputs.upToDateWhen { false }
             scanForTestClasses = false
             include "**/*Test.class"
+        }
+
+        androidProject.tasks.withType(JavaCompile) {
+            it.doFirst {
+                writeProperties(processedManifestPath, processedResourcesPath, processedAssetsPath)
+            }
         }
 
         //configure cobertura gradle plugin if applied
@@ -128,9 +140,6 @@ class RobojavaPlugin implements Plugin<Project> {
         }
 
         //write metadata useful for custom test runner
-        def processedManifestPath = variant.outputs[0].processManifest.manifestOutputFile.absolutePath
-        def processedResourcesPath = variant.mergeResources.outputDir.absolutePath
-        def processedAssetsPath = variant.mergeAssets.outputDir.absolutePath
         writeProperties(processedManifestPath, processedResourcesPath, processedAssetsPath)
     }
 
