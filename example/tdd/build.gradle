@@ -1,3 +1,5 @@
-evaluationDependsOn(':robojava')
-ext.androidProject = 'robojava'
+evaluationDependsOn(':app')
+ext.androidProject = 'app'
+ext.variant = 'freeDebug' // add the test variant flavor (remove if you do not have use flavors)
+apply plugin: 'cobertura' // add if you want code coverage
 apply plugin: 'com.kageiit.robojava'

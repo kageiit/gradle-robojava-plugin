@@ -4,8 +4,11 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:1.0.0'
-        classpath 'com.kageiit:robojava-plugin:1.0.0'
-        classpath 'org.robolectric:robolectric-gradle-plugin:0.14.+'
+        classpath 'com.kageiit:robojava-plugin:1.1.0'
+        // add below dependency if you need cobertura code coverage
+        classpath("net.saliman:gradle-cobertura-plugin:2.2.5") {
+            exclude group: "xerces", module: "xercesImpl"
+        }
     }
 }
 

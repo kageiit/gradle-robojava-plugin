@@ -1,5 +1,4 @@
 apply plugin: 'com.android.application'
-apply plugin: 'robolectric'
 
 dependencies {
     androidTestCompile 'junit:junit:4.12'
@@ -7,14 +6,20 @@ dependencies {
         exclude group: "commons-logging", module: "commons-logging"
         exclude group: "org.apache.httpcomponents", module: "httpclient"
     }
+    // needed because of a bug in cobertura with the bundled version of xerces
+    androidTestCompile 'xerces:xercesImpl:2.7.1'
 }
 
 android {
     compileSdkVersion 21
     buildToolsVersion "21.1.2"
 
+    productFlavors {
+        free
+        pro
+    }
+
     defaultConfig {
-        applicationId "com.kageiit.robojavaapplication"
         minSdkVersion 16
         targetSdkVersion 21
         versionCode 1
@@ -26,8 +31,8 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    // add generated-sources to be able to import RobojavaConfig foreasy configuration of custom testrunner
+    sourceSets.androidTest.java.srcDirs += 'build/generated-sources'
 }
 
-robolectric {
-    include "com/kageiit/**/*Test.class"
-}

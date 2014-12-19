@@ -2,16 +2,14 @@ package com.kageiit;
 
 import android.app.Activity;
 
-import com.kageiit.test.RobojavaTestRunner;
+import com.kageiit.test.RobojavaTestBase;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
 
 import static org.junit.Assert.assertTrue;
 
-@RunWith(RobojavaTestRunner.class)
-public class RobojavaActivityTest {
+public class RobojavaActivityTest extends RobojavaTestBase {
 
     @Test
     public void testSomething() throws Exception {

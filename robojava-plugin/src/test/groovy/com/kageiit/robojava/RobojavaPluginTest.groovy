@@ -36,14 +36,6 @@ public class RobojavaPluginTest {
         robojavaPlugin.apply(testProject)
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void fails_without_robolectric_plugin_applied() {
-        Project project = ProjectBuilder.builder().withName("norobo").withParent(rootProject).build()
-        project.apply plugin: 'com.android.library'
-        testProject.ext.androidProject = "norobo"
-        robojavaPlugin.apply(testProject)
-    }
-
     @Test
     public void succeeds_with_android_plugin_applied() {
         testProject.ext.androidProject = "android"
@@ -63,12 +55,10 @@ public class RobojavaPluginTest {
             }
             dependencies {
                 classpath 'com.android.tools.build:gradle:1.0.0'
-                classpath 'org.robolectric:robolectric-gradle-plugin:0.14.+'
             }
         }
 
         project.apply plugin: 'com.android.application'
-        project.apply plugin: 'robolectric'
 
         project.android {
             compileSdkVersion 21
