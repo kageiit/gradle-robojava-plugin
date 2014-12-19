@@ -141,7 +141,7 @@ class RobojavaPlugin implements Plugin<Project> {
     }
 
     def writeProperties(String manifest, String resources, String assets) {
-        def roboJavaOutputDir = new File("${androidProject.buildDir}/generated-sources/robojava")
+        def roboJavaOutputDir = new File("${androidProject.buildDir}/generated-sources/robojava/com/kageit/robojava")
         roboJavaOutputDir.mkdirs()
         def robojavaConfigFile = new File(roboJavaOutputDir, "RobojavaConfig.java")
         JavaWriter writer = new JavaWriter(new FileWriter(robojavaConfigFile))

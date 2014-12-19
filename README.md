@@ -15,7 +15,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath "com.kageiit:robojava-plugin:1.1.0"
+        classpath "com.kageiit:robojava-plugin:1.1.1"
     }
 }
 ```
@@ -56,7 +56,6 @@ Compatibility
 This plugin was tested against
 - Android Studio - v1.0.1
 - Android Gradle Build Plugin - v1.0.0
-- Robolectric Gradle Plugin - v0.14.1
 
 Known Issues
 ------------
