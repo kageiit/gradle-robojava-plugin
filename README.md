@@ -15,7 +15,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath "com.kageiit:robojava-plugin:1.1.2"
+        classpath "com.kageiit:robojava-plugin:1.1.3"
     }
 }
 ```
