@@ -3,6 +3,7 @@ package com.kageiit.robojava
 import com.android.build.gradle.AppPlugin
 import com.android.build.gradle.LibraryPlugin
 import com.squareup.javawriter.JavaWriter
+import groovy.json.StringEscapeUtils
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.dsl.RepositoryHandler
@@ -158,13 +159,16 @@ class RobojavaPlugin implements Plugin<Project> {
                 .emitPackage("com.kageiit.robojava")
                 .beginType("RobojavaConfig", "class", EnumSet.of(PUBLIC, FINAL))
         if (new File(manifest).exists()) {
-            writer.emitField("String", "MANIFEST", EnumSet.of(PUBLIC, STATIC, FINAL), "\"" + manifest + "\"")
+            writer.emitField("String", "MANIFEST", EnumSet.of(PUBLIC, STATIC, FINAL),
+                    "\"" + StringEscapeUtils.escapeJava(manifest) + "\"")
         }
         if (new File(resources).exists()) {
-            writer.emitField("String", "RESOURCES", EnumSet.of(PUBLIC, STATIC, FINAL), "\"" + resources + "\"")
+            writer.emitField("String", "RESOURCES", EnumSet.of(PUBLIC, STATIC, FINAL),
+                    "\"" + StringEscapeUtils.escapeJava(resources) + "\"")
         }
         if (new File(assets).exists()) {
-            writer.emitField("String", "ASSETS", EnumSet.of(PUBLIC, STATIC, FINAL), "\"" + assets + "\"")
+            writer.emitField("String", "ASSETS", EnumSet.of(PUBLIC, STATIC, FINAL),
+                    "\"" + StringEscapeUtils.escapeJava(assets) + "\"")
         }
         writer.endType().close();
     }
