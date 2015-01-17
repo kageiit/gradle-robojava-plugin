@@ -7,6 +7,7 @@ import groovy.json.StringEscapeUtils
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.dsl.RepositoryHandler
+import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.testing.Test
 
@@ -19,7 +20,8 @@ class RobojavaPlugin implements Plugin<Project> {
     Project robojavaProject
     Project androidProject
 
-    public static final String COBERTURA_PLUGIN_CLASS_NAME = "net.saliman.gradle.plugin.cobertura.CoberturaPlugin"
+    static final String COBERTURA_PLUGIN_CLASS_NAME = "net.saliman.gradle.plugin.cobertura.CoberturaPlugin"
+    static final String APT_PLUGIN_CLASS_NAME = "com.neenbedankt.gradle.androidapt.AndroidAptPlugin"
 
     @Override
     void apply(Project project) {
@@ -71,15 +73,32 @@ class RobojavaPlugin implements Plugin<Project> {
         }
 
         //detect source directories
+        def flavorSources = []
+        def flavorResources = []
         def flavorTestSources = []
         def flavorTestResources = []
         if (hasFlavor) {
+            flavorSources = android.sourceSets[flavor.toLowerCase()]["java"].srcDirs.asList()
+            flavorResources = android.sourceSets[flavor.toLowerCase()].resources.srcDirs.asList()
             flavorTestSources = android.sourceSets["androidTest${flavor}"]["java"].srcDirs.asList()
             flavorTestResources = android.sourceSets["androidTest${flavor}"].resources.srcDirs.asList()
         }
 
         robojavaProject.sourceSets.test.java.srcDirs = android.sourceSets.androidTest.java.srcDirs.asList() + flavorTestSources
         robojavaProject.sourceSets.test.resources.srcDirs = android.sourceSets.androidTest.resources.srcDirs.asList() + flavorTestResources
+
+        // To enable main sources to be found in the ide for debugging purposes etc.
+        robojavaProject.sourceSets.main.java.srcDirs = android.sourceSets.main.java.srcDirs.asList() +
+                flavorSources + robojavaProject.sourceSets.test.java.srcDirs
+        robojavaProject.sourceSets.main.resources.srcDirs = android.sourceSets.main.resources.srcDirs.asList() +
+                flavorResources + robojavaProject.sourceSets.test.resources.srcDirs
+
+        // copy over test resources
+        robojavaProject.task(type: Copy, "copyTestResources") {
+            from robojavaProject.sourceSets.test.resources
+            into robojavaProject.sourceSets.test.output.classesDir
+        }
+        robojavaProject.processTestResources.dependsOn(robojavaProject.copyTestResources)
 
         //detect configurations
         def androidCompile = addConfiguration("compile")
@@ -104,10 +123,17 @@ class RobojavaPlugin implements Plugin<Project> {
             }
         }
 
-
         def processedManifestPath = variant.outputs[0].processManifest.manifestOutputFile.absolutePath
         def processedResourcesPath = variant.mergeResources.outputDir.absolutePath
         def processedAssetsPath = variant.mergeAssets.outputDir.absolutePath
+
+        // We don't want the compile tasks of the test project to run because compilation already happens in the
+        // android project compile phase.
+        project.gradle.taskGraph.beforeTask { task ->
+            if (task.name.equals("compileJava")) {
+                task.deleteAllActions()
+            }
+        }
 
         //configure test task
         robojavaProject.tasks.withType(Test) {
@@ -122,23 +148,7 @@ class RobojavaPlugin implements Plugin<Project> {
             }
         }
 
-        //configure cobertura gradle plugin if applied
-        try {
-            if (robojavaProject.plugins.hasPlugin(Class.forName(COBERTURA_PLUGIN_CLASS_NAME))) {
-                def flavorSources = []
-                if (hasFlavor) {
-                    flavorSources = android.sourceSets[flavor.toLowerCase()]["java"].srcDirs.asList()
-                }
-                robojavaProject.cobertura {
-                    coverageDirs = variant.javaCompile.outputs.files.collect { it.toString() }
-                    coverageSourceDirs = android.sourceSets.main.java.srcDirs.asList() + flavorSources
-                    auxiliaryClasspath += variant.javaCompile.classpath
-                    coverageExcludes = [".*\\.package-info.*", ".*\\.R.*", ".*BuildConfig.*"]
-                }
-
-            }
-        } catch (ClassNotFoundException ignored) {
-        }
+        configureExternalPlugins(variant)
 
         //write metadata useful for custom test runner
         writeProperties(processedManifestPath, processedResourcesPath, processedAssetsPath)
@@ -148,6 +158,54 @@ class RobojavaPlugin implements Plugin<Project> {
         def configuration = androidProject.getConfigurations().getByName(name).copyRecursive()
         robojavaProject.configurations.add(configuration)
         return configuration
+    }
+
+    def configureApt() {
+        def aptConfiguration = androidProject.configurations.getByName("androidTestApt")
+        if (aptConfiguration) {
+            def aptOutputDir = androidProject.file(new File(androidProject.buildDir, "generated/source/apt"))
+            def aptOutput = new File(aptOutputDir, robojavaProject.name)
+
+            robojavaProject.sourceSets.main.java.srcDirs += aptOutput
+
+            def processorPath = aptConfiguration.getAsPath()
+            robojavaProject.compileTestJava.options.compilerArgs += [
+                    '-processorpath', processorPath,
+                    '-s', aptOutput
+            ]
+
+            robojavaProject.compileTestJava.options.compilerArgs += androidProject.apt.arguments()
+            robojavaProject.compileTestJava.doFirst {
+                aptOutput.mkdirs()
+            }
+        }
+    }
+
+    def configureCobertura(def variant) {
+        robojavaProject.cobertura {
+            coverageDirs = variant.javaCompile.outputs.files.collect { it.toString() }
+            coverageSourceDirs = robojavaProject.sourceSets.main.java.srcDirs.asList()
+            auxiliaryClasspath += variant.javaCompile.classpath
+            coverageExcludes = [".*\\.package-info.*", ".*\\.R.*", ".*BuildConfig.*"]
+        }
+    }
+
+    def configureExternalPlugins(def variant) {
+        //configure cobertura gradle plugin if applied
+        try {
+            if (robojavaProject.plugins.hasPlugin(Class.forName(COBERTURA_PLUGIN_CLASS_NAME))) {
+                configureCobertura(variant)
+            }
+        } catch (ClassNotFoundException ignored) {
+        }
+
+        //configure android apt gradle plugin if applied
+        try {
+            if (androidProject.plugins.hasPlugin(Class.forName(APT_PLUGIN_CLASS_NAME))) {
+                configureApt()
+            }
+        } catch (ClassNotFoundException ignored) {
+        }
     }
 
     def writeProperties(String manifest, String resources, String assets) {
