@@ -1,26 +1,22 @@
 gradle-robojava-plugin
 ======================
+[ ![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.kageiit/robojava-plugin/badge.svg) ](https://maven-badges.herokuapp.com/maven-central/com.kageiit/robojava-plugin)[ ![Jcenter](https://api.bintray.com/packages/kageiit/gradle-plugins/robojava-plugin/images/download.svg) ](https://bintray.com/kageiit/gradle-plugins/robojava-plugin/_latestVersion) [![Android Arsenal](https://img.shields.io/badge/Android%20Arsenal-gradle--robojava--plugin-brightgreen.svg?style=flat =18y)](https://android-arsenal.com/details/1/1267)
 
 Robojava is a [Gradle](https://www.gradle.org) plugin that allows simple integration of [Robolectric](http://robolectric.org/) into Android Studio. This plugin works by creating a stub java project. This allows extending it with powerful plugins that are compatible with gradle java projects, but not with gradle android projects, like [Gradle Cobertura Plugin](https://github.com/stevesaliman/gradle-cobertura-plugin) for example.
 
 Usage
 -----
-The plugin is available on [Jcenter](https://bintray.com/bintray/jcenter)
-
-Assuming your project structure is a [Multi Project Gradle Build](https://gradle.org/docs/current/userguide/multi_project_builds.html), add the following to your root `build.gradle`:
+Assuming your project structure is a [Multi Project Gradle Build](https://gradle.org/docs/current/userguide/multi_project_builds.html), add the following to your root buildscript's dependencies section:
 
 ```groovy
 buildscript {
-    repositories {
-        jcenter()
-    }
     dependencies {
-        classpath "com.kageiit:robojava-plugin:1.1.5"
+        classpath 'com.kageiit:robojava-plugin:1.2.0'
     }
 }
 ```
 
-Then create a stub project at the same level as your app/lib android project with a `build.gradle` like so:
+Then create a stub project at the same level as your android project with a `build.gradle` like so:
 
 ```groovy
 evaluationDependsOn(':myapp')
@@ -52,10 +48,9 @@ This plugin was created mainly to address the problem of not being able to confi
 
 Compatibility
 -------------
-
-This plugin was tested against
-- Android Studio - v1.0.1
-- Android Gradle Build Plugin - v1.0.0
+This plugin was tested against versions
+- Android Studio - 1.1 Preview 1
+- Android Gradle Build Plugin - 1.0.0
 
 Known Issues
 ------------
