@@ -67,9 +67,9 @@ class RobojavaPlugin implements Plugin<Project> {
         if (variant == null) {
             variant = variants.find({ it.name == android.testBuildType })
         }
-        // fall back to debug
         if (variant == null) {
-            variant = "debug"
+            throw new IllegalStateException("Test variant could not be determined. Please specify it if you are using" +
+                    " flavors.")
         }
 
         //detect source directories
@@ -78,8 +78,8 @@ class RobojavaPlugin implements Plugin<Project> {
         def flavorTestSources = []
         def flavorTestResources = []
         if (hasFlavor) {
-            flavorSources = android.sourceSets[flavor.toLowerCase()]["java"].srcDirs.asList()
-            flavorResources = android.sourceSets[flavor.toLowerCase()].resources.srcDirs.asList()
+            flavorSources = android.sourceSets[lowerCamel(flavor)]["java"].srcDirs.asList()
+            flavorResources = android.sourceSets[lowerCamel(flavor)].resources.srcDirs.asList()
             flavorTestSources = android.sourceSets["androidTest${flavor}"]["java"].srcDirs.asList()
             flavorTestResources = android.sourceSets["androidTest${flavor}"].resources.srcDirs.asList()
         }
@@ -229,5 +229,9 @@ class RobojavaPlugin implements Plugin<Project> {
                     "\"" + StringEscapeUtils.escapeJava(assets) + "\"")
         }
         writer.endType().close();
+    }
+
+    private static String lowerCamel(String inp){
+        return inp[0].toLowerCase() + inp.substring(1);
     }
 }
