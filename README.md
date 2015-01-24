@@ -11,7 +11,7 @@ Assuming your project structure is a [Multi Project Gradle Build](https://gradle
 ```groovy
 buildscript {
     dependencies {
-        classpath 'com.kageiit:robojava-plugin:1.2.0'
+        classpath 'com.kageiit:robojava-plugin:1.+'
     }
 }
 ```
