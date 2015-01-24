@@ -127,6 +127,13 @@ class RobojavaPlugin implements Plugin<Project> {
         def processedResourcesPath = variant.mergeResources.outputDir.absolutePath
         def processedAssetsPath = variant.mergeAssets.outputDir.absolutePath
 
+        // copy over test assets
+        robojavaProject.task(type: Copy, "copyTestAssets") {
+            from android.sourceSets.androidTest.assets.srcDirs.asList()[0]
+            into processedAssetsPath
+        }
+        robojavaProject.processTestResources.dependsOn(robojavaProject.copyTestAssets)
+
         // We don't want the compile tasks of the test project to run because compilation already happens in the
         // android project compile phase.
         project.gradle.taskGraph.beforeTask { task ->
