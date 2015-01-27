@@ -6,6 +6,7 @@ import com.squareup.javawriter.JavaWriter
 import groovy.json.StringEscapeUtils
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.artifacts.dsl.RepositoryHandler
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.compile.JavaCompile
@@ -74,24 +75,16 @@ class RobojavaPlugin implements Plugin<Project> {
 
         //detect source directories
         def flavorSources = []
-        def flavorResources = []
         def flavorTestSources = []
         def flavorTestResources = []
         if (hasFlavor) {
             flavorSources = android.sourceSets[lowerCamel(flavor)]["java"].srcDirs.asList()
-            flavorResources = android.sourceSets[lowerCamel(flavor)].resources.srcDirs.asList()
             flavorTestSources = android.sourceSets["androidTest${flavor}"]["java"].srcDirs.asList()
             flavorTestResources = android.sourceSets["androidTest${flavor}"].resources.srcDirs.asList()
         }
 
         robojavaProject.sourceSets.test.java.srcDirs = android.sourceSets.androidTest.java.srcDirs.asList() + flavorTestSources
         robojavaProject.sourceSets.test.resources.srcDirs = android.sourceSets.androidTest.resources.srcDirs.asList() + flavorTestResources
-
-        // To enable main sources to be found in the ide for debugging purposes etc.
-        robojavaProject.sourceSets.main.java.srcDirs = android.sourceSets.main.java.srcDirs.asList() +
-                flavorSources + robojavaProject.sourceSets.test.java.srcDirs
-        robojavaProject.sourceSets.main.resources.srcDirs = android.sourceSets.main.resources.srcDirs.asList() +
-                flavorResources + robojavaProject.sourceSets.test.resources.srcDirs
 
         // copy over test resources
         robojavaProject.task(type: Copy, "copyTestResources") {
@@ -109,6 +102,7 @@ class RobojavaPlugin implements Plugin<Project> {
         if (hasFlavor) {
             androidFlavorTestCompile = addConfiguration("androidTest${flavor}Compile")
         }
+
         //add dependencies in the right order
         robojavaProject.dependencies {
             compile 'junit:junit:4.12'
@@ -136,8 +130,8 @@ class RobojavaPlugin implements Plugin<Project> {
 
         // We don't want the compile tasks of the test project to run because compilation already happens in the
         // android project compile phase.
-        project.gradle.taskGraph.beforeTask { task ->
-            if (task.name.equals("compileJava")) {
+        robojavaProject.gradle.taskGraph.beforeTask { Task task ->
+            if (task.project.equals(robojavaProject) && task.name.equals("compileJava")) {
                 task.deleteAllActions()
             }
         }
@@ -155,7 +149,7 @@ class RobojavaPlugin implements Plugin<Project> {
             }
         }
 
-        configureExternalPlugins(variant)
+        configureExternalPlugins(variant, flavorSources)
 
         //write metadata useful for custom test runner
         writeProperties(processedManifestPath, processedResourcesPath, processedAssetsPath)
@@ -188,20 +182,20 @@ class RobojavaPlugin implements Plugin<Project> {
         }
     }
 
-    def configureCobertura(def variant) {
+    def configureCobertura(def variant, def flavorSources) {
         robojavaProject.cobertura {
             coverageDirs = variant.javaCompile.outputs.files.collect { it.toString() }
-            coverageSourceDirs = robojavaProject.sourceSets.main.java.srcDirs.asList()
+            coverageSourceDirs = androidProject.android.sourceSets.main.java.srcDirs.asList() + flavorSources
             auxiliaryClasspath += variant.javaCompile.classpath
             coverageExcludes = [".*\\.package-info.*", ".*\\.R.*", ".*BuildConfig.*"]
         }
     }
 
-    def configureExternalPlugins(def variant) {
+    def configureExternalPlugins(def variant, def flavorSources) {
         //configure cobertura gradle plugin if applied
         try {
             if (robojavaProject.plugins.hasPlugin(Class.forName(COBERTURA_PLUGIN_CLASS_NAME))) {
-                configureCobertura(variant)
+                configureCobertura(variant, flavorSources)
             }
         } catch (ClassNotFoundException ignored) {
         }
@@ -238,7 +232,7 @@ class RobojavaPlugin implements Plugin<Project> {
         writer.endType().close();
     }
 
-    private static String lowerCamel(String inp){
+    private static String lowerCamel(String inp) {
         return inp[0].toLowerCase() + inp.substring(1);
     }
 }
